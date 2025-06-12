@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remote Control Panel</title>
+    <link rel="stylesheet" href="controller.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Styles specific to this HTML, potentially overriding Tailwind */
+      #cameraToggle.active {
+        background: #00aa00; /* Green when active */
+      }
+      #cameraToggle {
+        background: #ff4444; /* Red when inactive */
+        color: white;
+      }
+      #cameraFeed {
+        width: 320px;
+        height: 240px;
+        border: 2px solid #ddd;
+        background-color: #eee; /* Placeholder background */
+        display: none; /* Hidden by default */
+      }
+      /* Login Modal */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 400px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.3s ease-out;
+      }
+      .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      .close-button:hover,
+      .close-button:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .form-group input {
+        width: calc(100% - 16px);
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #loginError {
+        color: red;
+        margin-top: 10px;
+        text-align: center;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen flex flex-col items-center justify-center p-4"
+  >
+    <nav
+      class="w-full bg-blue-700 p-4 mb-8 rounded-lg shadow-lg flex justify-between items-center max-w-lg"
+    >
+      <div class="text-white text-2xl font-bold">Remote Pilot</div>
+      <ul class="flex space-x-4">
+        <li>
+          <a
+            href="controller_panel.html"
+            class="text-white hover:text-blue-200 transition duration-300"
+            >Control</a
+          >
+        </li>
+        <li>
+          <a
+            href="mobile"
+            class="text-white hover:text-blue-200 transition duration-300"
+            >Mobile Device Link</a
+          >
+        </li>
+      </ul>
+    </nav>
+
+    <h1 class="text-4xl font-extrabold text-blue-800 mb-10 drop-shadow-md">
+      Remote Control Panel
+    </h1>
+
+    <div
+      class="controls bg-white p-8 rounded-3xl shadow-2xl border border-blue-300 flex flex-col items-center"
+    >
+      <div class="row">
+        <button
+          onclick="sendDirection('up')"
+          aria-label="Move Up"
+          class="control-button bg-green-500 text-white text-4xl font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transform transition duration-300 active:bg-green-600 active:shadow-inner focus:outline-none focus:ring-4 focus:ring-green-400 focus:ring-opacity-75"
+        >
+          ⬆️
+        </button>
+      </div>
+      <div class="row flex justify-center mt-4">
+        <button
+          onclick="sendDirection('left')"
+          aria-label="Move Left"
+          class="control-button bg-red-500 text-white text-4xl font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transform transition duration-300 active:bg-red-600 active:shadow-inner focus:outline-none focus:ring-4 focus:ring-red-400 focus:ring-opacity-75 mr-4"
+        >
+          ⬅️
+        </button>
+        <button
+          onclick="sendDirection('down')"
+          aria-label="Move Down"
+          class="control-button bg-yellow-500 text-white text-4xl font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transform transition duration-300 active:bg-yellow-600 active:shadow-inner focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:ring-opacity-75 mr-4"
+        >
+          ⬇️
+        </button>
+        <button
+          onclick="sendDirection('right')"
+          aria-label="Move Right"
+          class="control-button bg-blue-500 text-white text-4xl font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transform transition duration-300 active:bg-blue-600 active:shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-opacity-75"
+        >
+          ➡️
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="mt-8 bg-white p-8 rounded-3xl shadow-2xl border border-blue-300 flex flex-col items-center w-full max-w-lg"
+    >
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Camera Feed</h2>
+      <button
+        id="cameraToggle"
+        class="control-button mb-4 px-6 py-3 rounded-lg text-xl"
+      >
+        Start Camera
+      </button>
+      <img id="cameraFeed" alt="Camera Feed" />
+      <div class="message-box mt-4 w-full" id="cameraStatus">
+        Camera status: Disconnected
+      </div>
+    </div>
+
+    <div class="message-box mt-8 w-full max-w-lg" id="statusMessage">
+      Initializing control panel...
+    </div>
+
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+          Camera Access Login
+        </h2>
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" required autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+        <button
+          id="loginBtn"
+          class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Login
+        </button>
+        <div id="loginError"></div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+    <script>
+      const socket = io(); // Connect to the Socket.IO server
+      const statusMessage = document.getElementById("statusMessage");
+      const cameraStatus = document.getElementById("cameraStatus");
+      const cameraToggle = document.getElementById("cameraToggle");
+      const cameraFeed = document.getElementById("cameraFeed");
+      const loginModal = document.getElementById("loginModal");
+      const closeLoginModalBtn = document.querySelector(".close-button");
+      const loginBtn = document.getElementById("loginBtn");
+      const loginError = document.getElementById("loginError");
+      const usernameInput = document.getElementById("username");
+      const passwordInput = document.getElementById("password");
+
+      let isCameraActive = false; // Local state to track camera status
+
+      /**
+       * Updates the status message displayed in the UI.
+       * @param {HTMLElement} element - The HTML element to update (e.g., statusMessage, cameraStatus).
+       * @param {string} message - The message to display.
+       * @param {string} type - 'default', 'success', or 'error' to apply styling.
+       */
+      function updateStatus(element, message, type = "default") {
+        element.textContent = message;
+
+        // Remove existing type classes before adding new ones
+        element.classList.remove("success-box", "error-box");
+
+        if (type === "success") {
+          element.classList.add("success-box");
+        } else if (type === "error") {
+          element.classList.add("error-box");
+        }
+        // No need to reset base classes, they are defined in HTML and controller.css
+      }
+
+      // --- Character Control ---
+      // This function is called by the onclick attributes on the buttons
+      window.sendDirection = function (direction) {
+        socket.emit("move_command", { direction: direction });
+        updateStatus(statusMessage, `Sent move command: ${direction}`);
+      };
+
+      // --- Camera Control ---
+      cameraToggle.addEventListener("click", toggleCamera);
+      closeLoginModalBtn.addEventListener("click", () => {
+        loginModal.style.display = "none";
+        loginError.textContent = ""; // Clear any previous errors
+      });
+      loginBtn.addEventListener("click", attemptLogin);
+
+      async function toggleCamera() {
+        if (isCameraActive) {
+          // If camera is currently active, stop it
+          try {
+            const response = await fetch("/toggle_camera", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "stop" }),
+            });
+            const data = await response.json();
+            if (data.status === "camera_stopped") {
+              isCameraActive = false;
+              cameraToggle.textContent = "Start Camera";
+              cameraToggle.classList.remove("active");
+              cameraFeed.style.display = "none";
+              cameraFeed.src = ""; // Clear image
+              updateStatus(cameraStatus, "Camera status: Stopped", "default");
+              console.log("Camera stopped.");
+            } else {
+              updateStatus(
+                cameraStatus,
+                `Failed to stop camera: ${data.error || "Unknown error"}`,
+                "error"
+              );
+            }
+          } catch (error) {
+            console.error("Error stopping camera:", error);
+            updateStatus(
+              cameraStatus,
+              `Error stopping camera: ${error.message}`,
+              "error"
+            );
+          }
+        } else {
+          // If camera is not active, show login modal to start it
+          loginModal.style.display = "flex"; // Use flex to center the modal
+          usernameInput.value = ""; // Clear inputs
+          passwordInput.value = "";
+          usernameInput.focus();
+        }
+      }
+
+      async function attemptLogin() {
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        loginError.textContent = ""; // Clear previous errors
+
+        try {
+          const response = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            loginModal.style.display = "none";
+            updateStatus(
+              statusMessage,
+              "Login successful. Attempting to start camera...",
+              "success"
+            );
+
+            // Now, request the server to start the camera stream
+            const cameraResponse = await fetch("/toggle_camera", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "start" }),
+            });
+            const cameraData = await cameraResponse.json();
+
+            if (
+              cameraData.status === "camera_expected_from_mobile" &&
+              cameraData.active
+            ) {
+              isCameraActive = true;
+              cameraToggle.textContent = "Stop Camera";
+              cameraToggle.classList.add("active");
+              cameraFeed.style.display = "block"; // Show camera feed
+              updateStatus(
+                cameraStatus,
+                "Camera status: Streaming...",
+                "success"
+              );
+              console.log("Camera started successfully.");
+            } else {
+              updateStatus(
+                cameraStatus,
+                `Failed to start camera: ${
+                  cameraData.error || "Unknown error"
+                }`,
+                "error"
+              );
+              isCameraActive = false; // Ensure state is correct if start fails
+            }
+          } else {
+            loginError.textContent =
+              data.error || "Login failed. Please try again.";
+            updateStatus(statusMessage, "Login failed.", "error");
+          }
+        } catch (error) {
+          console.error("Login or Camera Start Error:", error);
+          loginError.textContent =
+            "An error occurred during login. Please check console.";
+          updateStatus(
+            statusMessage,
+            "Network error during login/camera start.",
+            "error"
+          );
+        }
+      }
+
+      // --- Socket.IO Event Handlers ---
+      socket.on("connect", () => {
+        updateStatus(statusMessage, "Connected to server!", "success");
+        console.log("Socket.IO connected.");
+      });
+
+      socket.on("disconnect", () => {
+        updateStatus(statusMessage, "Disconnected from server.", "error");
+        updateStatus(cameraStatus, "Camera status: Disconnected", "error");
+        isCameraActive = false; // Reset camera state on disconnect
+        cameraToggle.textContent = "Start Camera";
+        cameraToggle.classList.remove("active");
+        cameraFeed.style.display = "none";
+        cameraFeed.src = "";
+        console.log("Socket.IO disconnected.");
+      });
+
+      socket.on("camera_frame", (data) => {
+        if (isCameraActive && data.frame) {
+          cameraFeed.src = `data:image/jpeg;base64,${data.frame}`;
+          // console.log("Received camera frame."); // Uncomment to see frame logs
+        }
+      });
+
+      socket.on("character_position_update", (position) => {
+        // This panel doesn't display the character directly, but logs it
+        // You could add a visual representation here if you wanted.
+        console.log(
+          `Character current position: X: ${position.x}, Y: ${position.y}`
+        );
+      });
+
+      // Initial status message
+      updateStatus(statusMessage, "Attempting to connect to server...");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobile Device</title>
+    <link rel="stylesheet" href="device.css" />
+    <style>
+      /* Add specific styles for the video element to hide it */
+      #localVideo {
+        display: none; /* Hide the video element that captures the stream */
+        width: 1px; /* Make it very small */
+        height: 1px;
+        position: absolute; /* Take it out of flow */
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-area">
+      <div id="character"></div>
+    </div>
+
+    <video id="localVideo" autoplay playsinline></video>
+
+    <div
+      id="cameraStatus"
+      style="
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.8em;
+        z-index: 100;
+      "
+    >
+      Camera: Inactive
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const character = document.getElementById("character");
+      const localVideo = document.getElementById("localVideo");
+      const cameraStatusElement = document.getElementById("cameraStatus");
+      const CANVAS_WIDTH = 320; // Resolution to send frames
+      const CANVAS_HEIGHT = 240;
+
+      // Game area dimensions for movement
+      const GRID_SIZE = 30; // Step size and cell size
+      const GAME_AREA_DIM = 300;
+      const CHAR_DIM = 30;
+      const MAX_POS = GAME_AREA_DIM - CHAR_DIM;
+
+      // Initialize character position (matching app.py initial state)
+      let currentPosX = 135;
+      let currentPosY = 135;
+      character.style.left = `${currentPosX}px`;
+      character.style.top = `${currentPosY}px`;
+
+      let mediaStream = null; // To hold the camera stream
+      let cameraInterval = null; // To hold the interval for sending frames
+
+      // --- Character Movement Function ---
+      function updateCharacterPosition(x, y) {
+        currentPosX = x;
+        currentPosY = y;
+        character.style.left = `${x}px`;
+        character.style.top = `${y}px`;
+      }
+
+      // --- Camera Control Functions ---
+      async function startCamera() {
+        if (mediaStream) {
+          console.log("Camera already active.");
+          updateCameraStatus("Active");
+          return; // Already streaming
+        }
+        try {
+          updateCameraStatus("Starting...");
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT },
+            audio: false,
+          });
+          localVideo.srcObject = mediaStream;
+          await localVideo.play();
+
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          canvas.width = CANVAS_WIDTH;
+          canvas.height = CANVAS_HEIGHT;
+
+          // Start sending frames every 500ms
+          cameraInterval = setInterval(() => {
+            if (localVideo.readyState === localVideo.HAVE_ENOUGH_DATA) {
+              context.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
+              const dataURL = canvas.toDataURL("image/jpeg", 0.7).split(",")[1]; // Quality 0.7
+              socket.emit("mobile_camera_frame", { frame: dataURL });
+              // console.log("Sent frame to server."); // Uncomment for debug
+            }
+          }, 500); // Send frame every 0.5 seconds
+
+          updateCameraStatus("Active");
+          console.log("Mobile camera started and sending frames.");
+        } catch (err) {
+          console.error("Error accessing camera:", err);
+          updateCameraStatus(`Error: ${err.name}`);
+          alert(
+            `Could not start camera: ${err.message}. Make sure you grant camera permissions.`
+          );
+          stopCamera(); // Clean up if camera fails
+        }
+      }
+
+      function stopCamera() {
+        if (cameraInterval) {
+          clearInterval(cameraInterval);
+          cameraInterval = null;
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+        localVideo.srcObject = null;
+        updateCameraStatus("Inactive");
+        console.log("Mobile camera stopped.");
+      }
+
+      function updateCameraStatus(status) {
+        cameraStatusElement.textContent = `Camera: ${status}`;
+      }
+
+      // --- Socket.IO Event Handlers ---
+      socket.on("connect", () => {
+        console.log("Mobile device connected to server.");
+        // When connected, the server will send initial character position
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Mobile device disconnected from server.");
+        stopCamera(); // Stop camera if server connection is lost
+      });
+
+      socket.on("character_position_update", (position) => {
+        console.log(
+          `Received new character position: X: ${position.x}, Y: ${position.y}`
+        );
+        updateCharacterPosition(position.x, position.y);
+      });
+
+      socket.on("start_camera_stream", () => {
+        console.log("Received command to start camera stream.");
+        startCamera();
+      });
+
+      socket.on("stop_camera_stream", () => {
+        console.log("Received command to stop camera stream.");
+        stopCamera();
+      });
+
+      // Request initial position on load (server sends it on connect anyway)
+      window.onload = () => {
+        console.log("Mobile device page loaded.");
+      };
+    </script>
+  </body>
+</html>

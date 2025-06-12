@@ -1,0 +1,51 @@
+/* device.css */
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    /* Allow content to stack */
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f0f0f0;
+    overflow: hidden;
+    /* Prevent scrolling */
+}
+
+/* Grid container */
+#game-area {
+    width: 300px;
+    height: 300px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    border: 4px solid #444;
+    background-color: white;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Optional grid lines for visual clarity */
+#game-area::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(to right, #ccc 1px, transparent 1px),
+        linear-gradient(to bottom, #ccc 1px, transparent 1px);
+    background-size: calc(300px / 10) calc(300px / 10);
+    pointer-events: none;
+    /* Allows clicks to pass through to elements beneath */
+}
+
+/* Character box */
+#character {
+    width: 30px;
+    height: 30px;
+    background-color: red;
+    position: absolute;
+    /* Initial top/left will be set by JS dynamically */
+    transition: left 0.1s linear, top 0.1s linear;
+    /* Smooth movement */
+}

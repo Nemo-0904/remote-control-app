@@ -1,0 +1,85 @@
+/* controller.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+/* Apply Inter font to the body */
+body {
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+    /* Ensure consistent box model */
+}
+
+/* Base button styling common for all control buttons */
+.control-button {
+    width: 5rem;
+    /* Equivalent to w-20 */
+    height: 5rem;
+    /* Equivalent to h-20 */
+    font-size: 2.5rem;
+    /* Equivalent to text-4xl */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    /* Prevent text selection on rapid clicks */
+}
+
+/* Media query for medium screens and above (md: from Tailwind) */
+@media (min-width: 768px) {
+    .control-button {
+        width: 6rem;
+        /* Equivalent to md:w-24 */
+        height: 6rem;
+        /* Equivalent to md:h-24 */
+        font-size: 3rem;
+        /* Slightly larger on desktop */
+    }
+}
+
+/* Keyframe animation for button press feedback */
+@keyframes button-press-animation {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    50% {
+        transform: scale(0.95);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Apply animation on active state (when button is pressed) */
+.control-button:active {
+    animation: button-press-animation 0.2s ease-out;
+}
+
+/* Message box styling */
+.message-box {
+    background-color: #e0f7fa;
+    border-left: 5px solid #00bcd4;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.success-box {
+    background-color: #e8f5e9;
+    border-left: 5px solid #28a745;
+    color: #28a745;
+}
+
+.error-box {
+    background-color: #ffebee;
+    border-left: 5px solid #dc3545;
+    color: #dc3545;
+}
