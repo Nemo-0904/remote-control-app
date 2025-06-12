@@ -208,7 +208,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 
     <script>
-      const socket = io(); // Connect to the Socket.IO server
+      const socket = io("https://remote-control-app-b072.onrender.com");
       const statusMessage = document.getElementById("statusMessage");
       const cameraStatus = document.getElementById("cameraStatus");
       const cameraToggle = document.getElementById("cameraToggle");
