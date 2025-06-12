@@ -95,15 +95,17 @@
           canvas.height = CANVAS_HEIGHT;
 
           // Start sending frames every 500ms
-          cameraInterval = setInterval((setInterval(captureAndSendFrame, 100); // sends frame every 100ms (10 fps)
-          ) => {
+          // Replace the problematic interval code with:
+          function captureAndSendFrame() {
             if (localVideo.readyState === localVideo.HAVE_ENOUGH_DATA) {
               context.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
               const dataURL = canvas.toDataURL("image/jpeg", 0.7).split(",")[1]; // Quality 0.7
               socket.emit("mobile_camera_frame", { frame: dataURL });
-              // console.log("Sent frame to server."); // Uncomment for debug
             }
-          }, 500); // Send frame every 0.5 seconds
+          }
+
+          // Set up the interval correctly
+          cameraInterval = setInterval(captureAndSendFrame, 100);
 
           updateCameraStatus("Active");
           console.log("Mobile camera started and sending frames.");
