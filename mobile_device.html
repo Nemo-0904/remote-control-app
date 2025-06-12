@@ -95,7 +95,8 @@
           canvas.height = CANVAS_HEIGHT;
 
           // Start sending frames every 500ms
-          cameraInterval = setInterval(() => {
+          cameraInterval = setInterval((setInterval(captureAndSendFrame, 100); // sends frame every 100ms (10 fps)
+          ) => {
             if (localVideo.readyState === localVideo.HAVE_ENOUGH_DATA) {
               context.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
               const dataURL = canvas.toDataURL("image/jpeg", 0.7).split(",")[1]; // Quality 0.7
