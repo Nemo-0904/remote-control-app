@@ -49,3 +49,41 @@ body {
     transition: left 0.1s linear, top 0.1s linear;
     /* Smooth movement */
 }
+
+/* === Navbar Styles === */
+.navbar {
+  width: 100%;
+  background-color: #1e40af; /* Tailwind's blue-800 */
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.navbar-links a {
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.navbar-links a:hover {
+  color: #bfdbfe; /* Tailwind's blue-200 */
+}
+
+.navbar-links a.active {
+  text-decoration: underline;
+}
