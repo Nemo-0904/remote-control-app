@@ -1,4 +1,4 @@
-# --- IMPORTANT: Using gevent instead of eventlet due to previous issues ---
+
 from gevent import monkey
 monkey.patch_all() # This should be at the very top, before other imports that might be patched
 
