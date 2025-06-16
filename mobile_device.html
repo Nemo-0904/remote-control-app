@@ -6,47 +6,36 @@
     <title>Mobile Device</title>
     <link rel="stylesheet" href="device.css" />
     <style>
-      /* Add specific styles for the video element to hide it */
+      /* Hide local video preview */
       #localVideo {
-        display: none; /* Hide the video element that captures the stream */
-        width: 1px; /* Make it very small */
+        display: none;
+        width: 1px;
         height: 1px;
-        position: absolute; /* Take it out of flow */
+        position: absolute;
         opacity: 0;
         pointer-events: none;
       }
     </style>
   </head>
   <body>
-    <nav
-  style="background-color: #1e40af"
-  class="w-full p-4 mb-6 flex justify-between items-center shadow-md text-white"
->
-  <div class="text-xl font-bold">Remote Pilot</div>
-  <ul class="flex space-x-4 text-sm md:text-base">
-    <li>
-      <a
-        href="controller_panel.html"
-        class="hover:text-blue-200 transition duration-300"
-        >Control Panel</a
-      >
-    </li>
-    <li>
-      <a
-        href="mobile"
-        class="hover:text-blue-200 transition duration-300 underline"
-        >Mobile Device</a
-      >
-    </li>
-  </ul>
-</nav>
+    <!-- ✅ Navbar using custom CSS classes -->
+    <nav class="navbar">
+      <div class="navbar-brand">Remote Pilot</div>
+      <div class="navbar-links">
+        <a href="controller_panel.html">Control Panel</a>
+        <a href="mobile" class="active">Mobile Device</a>
+      </div>
+    </nav>
 
+    <!-- Game grid -->
     <div id="game-area">
       <div id="character"></div>
     </div>
 
+    <!-- Hidden video stream -->
     <video id="localVideo" autoplay playsinline></video>
 
+    <!-- Camera status indicator -->
     <div
       id="cameraStatus"
       style="
@@ -70,25 +59,21 @@
       const character = document.getElementById("character");
       const localVideo = document.getElementById("localVideo");
       const cameraStatusElement = document.getElementById("cameraStatus");
-      const CANVAS_WIDTH = 320; // Resolution to send frames
-      const CANVAS_HEIGHT = 240;
 
-      // Game area dimensions for movement
-      const GRID_SIZE = 30; // Step size and cell size
+      const CANVAS_WIDTH = 320;
+      const CANVAS_HEIGHT = 240;
+      const GRID_SIZE = 30;
       const GAME_AREA_DIM = 300;
       const CHAR_DIM = 30;
-      const MAX_POS = GAME_AREA_DIM - CHAR_DIM;
 
-      // Initialize character position (matching app.py initial state)
       let currentPosX = 135;
       let currentPosY = 135;
       character.style.left = `${currentPosX}px`;
       character.style.top = `${currentPosY}px`;
 
-      let mediaStream = null; // To hold the camera stream
-      let cameraInterval = null; // To hold the interval for sending frames
+      let mediaStream = null;
+      let cameraInterval = null;
 
-      // --- Character Movement Function ---
       function updateCharacterPosition(x, y) {
         currentPosX = x;
         currentPosY = y;
@@ -96,12 +81,11 @@
         character.style.top = `${y}px`;
       }
 
-      // --- Camera Control Functions ---
       async function startCamera() {
         if (mediaStream) {
           console.log("Camera already active.");
           updateCameraStatus("Active");
-          return; // Already streaming
+          return;
         }
         try {
           updateCameraStatus("Starting...");
@@ -117,28 +101,22 @@
           canvas.width = CANVAS_WIDTH;
           canvas.height = CANVAS_HEIGHT;
 
-          // Start sending frames every 500ms
-          // Replace the problematic interval code with:
           function captureAndSendFrame() {
             if (localVideo.readyState === localVideo.HAVE_ENOUGH_DATA) {
               context.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
-              const dataURL = canvas.toDataURL("image/jpeg", 0.7).split(",")[1]; // Quality 0.7
+              const dataURL = canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
               socket.emit("mobile_camera_frame", { frame: dataURL });
             }
           }
 
-          // Set up the interval correctly
           cameraInterval = setInterval(captureAndSendFrame, 100);
-
           updateCameraStatus("Active");
           console.log("Mobile camera started and sending frames.");
         } catch (err) {
           console.error("Error accessing camera:", err);
           updateCameraStatus(`Error: ${err.name}`);
-          alert(
-            `Could not start camera: ${err.message}. Make sure you grant camera permissions.`
-          );
-          stopCamera(); // Clean up if camera fails
+          alert(`Could not start camera: ${err.message}`);
+          stopCamera();
         }
       }
 
@@ -160,21 +138,16 @@
         cameraStatusElement.textContent = `Camera: ${status}`;
       }
 
-      // --- Socket.IO Event Handlers ---
       socket.on("connect", () => {
         console.log("Mobile device connected to server.");
-        // When connected, the server will send initial character position
       });
 
       socket.on("disconnect", () => {
         console.log("Mobile device disconnected from server.");
-        stopCamera(); // Stop camera if server connection is lost
+        stopCamera();
       });
 
       socket.on("character_position_update", (position) => {
-        console.log(
-          `Received new character position: X: ${position.x}, Y: ${position.y}`
-        );
         updateCharacterPosition(position.x, position.y);
       });
 
@@ -188,7 +161,6 @@
         stopCamera();
       });
 
-      // Request initial position on load (server sends it on connect anyway)
       window.onload = () => {
         console.log("Mobile device page loaded.");
       };
